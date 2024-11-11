@@ -1,35 +1,36 @@
-Data Download Duplication Alert System (DDAS) Overview
-The Data Download Duplication Alert System (DDAS) is an AI-driven tool designed to prevent duplicate downloads in multi-user environments, conserving storage and bandwidth while improving data management.
+# Data Download Duplication Alert System (DDAS) Overview
+The **Data Download Duplication Alert System (DDAS)** is an AI-driven tool designed to prevent duplicate downloads in multi-user environments, conserving storage and bandwidth while improving data management.
 
-Key Features
-AI-Powered Duplicate Detection: Utilizes BERT (text), CNN (images), SimHash, and FAISS for accurate duplicate detection.
-Real-Time Alerts: WebSocket integration provides instant notifications for potential duplicates.
-Resource Optimization: Reduces redundant downloads to save resources.
-Role-Based Access Control (RBAC): Controls access based on user roles.
-Audit Logging: Records actions for security and transparency.
-Technology Stack
-Backend: Java
-Database: MySQL (metadata storage)
-AI Models: BERT, CNN, SimHash, FAISS
-Real-Time Alerts: WebSocket
-Security: RBAC for permissions
-Getting Started
-Prerequisites:
+## Key Features
+- **AI-Powered Duplicate Detection**: Utilizes BERT (text), CNN (images), SimHash, and FAISS for accurate duplicate detection.
+- **Real-Time Alerts**: WebSocket integration provides instant notifications for potential duplicates.
+- **Resource Optimization**: Reduces redundant downloads to save resources.
+- **Role-Based Access Control (RBAC)**: Controls access based on user roles.
+- **Audit Logging**: Records actions for security and transparency.
 
-Java (11+)
-MySQL
-AI Libraries: Deeplearning4j, TensorFlow Java, FAISS
-WebSocket Libraries for Java
-Installation:
+## Technology Stack
+- **Backend**: Java
+- **Database**: MySQL (metadata storage)
+- **AI Models**: BERT, CNN, SimHash, FAISS
+- **Real-Time Alerts**: WebSocket
+- **Security**: RBAC for permissions
 
-Clone Repository: GitHub Link
-Database Setup: Create a MySQL database (e.g., ddas_db) and configure credentials in config.properties.
-Install Dependencies: Use Maven or Gradle to install necessary libraries.
-Run Application:
+## Getting Started
+### Prerequisites
+- Java (11+)
+- MySQL
+- AI Libraries: Deeplearning4j, TensorFlow Java, FAISS
+- WebSocket Libraries for Java
 
-bash
-Copy code
+### Installation
+1. **Clone Repository**: [GitHub Link](https://github.com/Aman-1610/DDAS.git)
+2. **Database Setup**: Create a MySQL database (e.g., `ddas_db`) and configure credentials in `config.properties`.
+3. **Install Dependencies**: Use Maven or Gradle to install necessary libraries.
+
+### Run Application
+```bash
 java -jar DDAS.jar
+
 Usage Workflow
 User Download Request: Captures metadata when a user initiates a download.
 AI-Powered Duplicate Detection: Uses AI models to analyze content:
@@ -49,9 +50,3 @@ Contributions are welcome! Fork the repository, create a branch, and submit a pu
 
 License
 This project is licensed under the MIT License. See the LICENSE file for details.
-
-
-
-
-
-
