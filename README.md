@@ -30,23 +30,25 @@ The **Data Download Duplication Alert System (DDAS)** is an AI-driven tool desig
 ### Run Application
 ```bash
 java -jar DDAS.jar
+```
+## Usage Workflow
+1. **User Download Request**: Captures metadata when a user initiates a download.
+2. **AI-Powered Duplicate Detection**: Uses AI models to analyze content:
+   - **Text**: BERT
+   - **Image**: CNN
+   - **Approximate Matching**: SimHash and FAISS
+3. **Real-Time Notification**: Alerts user if a duplicate is found.
+4. **Logging and Access Control**: RBAC verifies permissions and logs actions.
 
-Usage Workflow
-User Download Request: Captures metadata when a user initiates a download.
-AI-Powered Duplicate Detection: Uses AI models to analyze content:
-Text: BERT
-Image: CNN
-Approximate Matching: SimHash and FAISS
-Real-Time Notification: Alerts user if a duplicate is found.
-Logging and Access Control: RBAC verifies permissions and logs actions.
-System Architecture
-User Request: Triggers metadata capture.
-AI Model Processing: BERT, CNN, and SimHash process text and images.
-Duplicate Detection: FAISS searches for duplicate vectors.
-Notification: WebSocket sends real-time alerts.
-Logging: Records all interactions in the database.
-Contributions
+## System Architecture
+1. **User Request**: Triggers metadata capture.
+2. **AI Model Processing**: BERT, CNN, and SimHash process text and images.
+3. **Duplicate Detection**: FAISS searches for duplicate vectors.
+4. **Notification**: WebSocket sends real-time alerts.
+5. **Logging**: Records all interactions in the database.
+
+## Contributions
 Contributions are welcome! Fork the repository, create a branch, and submit a pull request.
 
-License
-This project is licensed under the MIT License. See the LICENSE file for details.
+## License
+This project is licensed under the **MIT License**. See the LICENSE file for details.
