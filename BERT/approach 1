@@ -1,0 +1,71 @@
+//Example of Java Code for Text Comparison via REST API
+
+
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+public class BertTextComparison {
+
+    // Send text to model server and get embeddings
+    public static double[] getBertEmbedding(String text) throws Exception {
+        String url = "http://localhost:8501/v1/models/bert:predict";  // Update with model server URL
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("text", text);
+
+        CloseableHttpClient client = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(url);
+        httpPost.setHeader("Content-Type", "application/json");
+        httpPost.setEntity(new StringEntity(requestBody.toString()));
+
+        CloseableHttpResponse response = client.execute(httpPost);
+        String jsonResponse = EntityUtils.toString(response.getEntity());
+        client.close();
+
+        JSONObject json = new JSONObject(jsonResponse);
+        JSONArray embeddingArray = json.getJSONArray("embedding");
+        
+        double[] embedding = new double[embeddingArray.length()];
+        for (int i = 0; i < embeddingArray.length(); i++) {
+            embedding[i] = embeddingArray.getDouble(i);
+        }
+        return embedding;
+    }
+
+    // Compute cosine similarity between two embeddings
+    public static double cosineSimilarity(double[] vec1, double[] vec2) {
+        double dotProduct = 0.0;
+        double normVec1 = 0.0;
+        double normVec2 = 0.0;
+        for (int i = 0; i < vec1.length; i++) {
+            dotProduct += vec1[i] * vec2[i];
+            normVec1 += Math.pow(vec1[i], 2);
+            normVec2 += Math.pow(vec2[i], 2);
+        }
+        return dotProduct / (Math.sqrt(normVec1) * Math.sqrt(normVec2));
+    }
+
+    // Main function to compare two texts
+    public static double compareTexts(String text1, String text2) throws Exception {
+        double[] embedding1 = getBertEmbedding(text1);
+        double[] embedding2 = getBertEmbedding(text2);
+        return cosineSimilarity(embedding1, embedding2);
+    }
+
+    public static void main(String[] args) {
+        try {
+            String text1 = "The quick brown fox jumps over the lazy dog";
+            String text2 = "A fast dark fox leaps over a sleepy dog";
+
+            double similarity = compareTexts(text1, text2);
+            System.out.println("Cosine Similarity: " + similarity);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
