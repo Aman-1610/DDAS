@@ -30,3 +30,12 @@ SavedModelBundle model = SavedModelBundle.load("path_to_model");
 Preprocess media files and extract features:
 ``` xml
 Tensor output = model.session().runner().feed("input_tensor", input).fetch("output_tensor").run().get(0);
+```
+### Step 4: Compare Features
+Calculate the Euclidean distance between feature vectors:
+```xml
+double distance = calculateEuclideanDistance(features1, features2);
+if (distance < threshold) {
+    System.out.println("Duplicate media detected!");
+}
+```
