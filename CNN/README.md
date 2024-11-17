@@ -1,40 +1,32 @@
+# CNN Model for Media Content Comparison
+
+## Why Use CNN?
+- **Purpose**: CNNs analyze patterns in images and videos to detect duplicates.
+- **Relevance**: It identifies duplicate media files, even when resized, cropped, or slightly modified.
+
+### Advantages:
+- Effective for visual similarity detection.
+- Works for image-based and video-based files.
 
 ---
 
-### **2. CNN Model: README.md**
+## How to Use CNN in DDAS
 
-
-# CNN Model for Media Content Comparison
-
-## Why CNN?
-### Key Features:
-- **Feature Extraction**: CNNs capture spatial patterns, like edges or textures in images.
-- **Scalability**: They work efficiently on large datasets using layers of convolution and pooling.
-
-### Relevance to DDAS:
-- Media files like images and videos require robust comparison methods. CNNs help identify duplicates even when images are cropped, resized, or slightly modified.
-
-## How Does CNN Work?
-1. **Convolution**:
-   - Extracts local features using filters.
-   - Example: A 3x3 filter highlights edges in an image.
-
-2. **Pooling**:
-   - Reduces the dimensionality of the feature map, retaining essential patterns.
-
-3. **Feature Vector Extraction**:
-   - The final layer generates a fixed-length vector representing the image.
-
-## Implementation in Java
-### Key Libraries:
-- **TensorFlow Java API**: Allows importing pre-trained models like ResNet or MobileNet.
-
-### Steps:
-1. **Install TensorFlow**:
-   Add the Maven dependency:
-   ```xml
-   <dependency>
-       <groupId>org.tensorflow</groupId>
-       <artifactId>tensorflow</artifactId>
-       <version>2.9.0</version>
-   </dependency>
+### Step 1: Install Required Libraries
+Add the TensorFlow dependency:
+```xml
+<dependency>
+    <groupId>org.tensorflow</groupId>
+    <artifactId>tensorflow</artifactId>
+    <version>2.9.0</version>
+</dependency>
+```
+### Step 2: Load Pre-trained Model
+```xml
+import org.tensorflow.SavedModelBundle;
+SavedModelBundle model = SavedModelBundle.load("path_to_model");
+```
+### Step 3: Extract Feature Vectors
+Preprocess media files and extract features:
+``` xml
+Tensor output = model.session().runner().feed("input_tensor", input).fetch("output_tensor").run().get(0);
