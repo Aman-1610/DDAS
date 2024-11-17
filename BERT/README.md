@@ -1,38 +1,44 @@
-# BERT Model for Textual Content Comparison
+# BERT Model for Semantic Text Comparison
 
-## Why BERT?
-BERT (Bidirectional Encoder Representations from Transformers) is a powerful NLP model that helps:
-- Understand contextual meaning in text.
-- Compare file content for duplication detection.
-- Analyze semantic similarity, making it ideal for text-based file comparison in DDAS.
+## Why Use BERT?
+- **Purpose**: BERT is ideal for analyzing textual content based on meaning rather than exact matches.
+- **Relevance**: It detects duplicate text files or descriptions, even if they are rephrased or paraphrased.
 
-## Implementation in Java
-### Prerequisites
-- Install a library like **Deep Java Library (DJL)** or use **Hugging Face Transformers** via Java bindings.
+### Advantages:
+- Handles context and semantics in text.
+- Works well for detecting plagiarism or similar documents.
 
-### Steps
-1. **Add Dependencies**:
-   Add the following Maven dependency:
-   ```xml
-   <dependency>
-       <groupId>ai.djl.pytorch</groupId>
-       <artifactId>pytorch-engine</artifactId>
-       <version>0.22.0</version>
-   </dependency>
-2. **Load the Pre-trained BERT Model**:
+---
+
+## How to Use BERT in DDAS
+
+### Step 1: Install Required Libraries
+Add the following Maven dependency:
+```xml
+<dependency>
+    <groupId>ai.djl</groupId>
+    <artifactId>api</artifactId>
+    <version>0.21.0</version>
+</dependency>
+```
+### Step 2: Load Pre-trained Model
 ```xml
 import ai.djl.Model;
 import ai.djl.translate.TranslateException;
 
 Model model = Model.newInstance("bert-base-uncased");
 ```
-3. **Preprocess Input Data: Tokenize text using a tokenizer**:
+### Step 3: Generate Embeddings
+Tokenize the text and generate numerical embeddings:
 ```xml
-String text = "Example text for similarity comparison";
-// Tokenize text here using DJL or custom tokenizer
+Translator<String, float[]> translator = new YourBertTranslator();
+float[] embedding = model.newPredictor(translator).predict("File content here");
 ```
-4. **Perform Textual Similarity Check**:
+### Step 4: Compare Embeddings
+Use cosine similarity to determine duplicate content:
 ```xml
-Generate sentence embeddings.
-Use cosine similarity to compare embeddings
+double cosineSimilarity = dotProduct / (magnitude1 * magnitude2);
+if (cosineSimilarity > 0.9) {
+    System.out.println("Duplicate text detected!");
+}
 ```
