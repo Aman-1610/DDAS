@@ -3,7 +3,7 @@
 
 ### **2. CNN Model: README.md**
 
-```markdown
+
 # CNN Model for Media Content Comparison
 
 ## Why CNN?
