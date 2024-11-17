@@ -1,0 +1,106 @@
+
+//1..LIBRARY INSTALL 
+<dependencies>
+    <dependency>
+        <groupId>ai.djl</groupId>
+        <artifactId>api</artifactId>
+        <version>0.21.0</version>
+    </dependency>
+    <dependency>
+        <groupId>ai.djl.pytorch</groupId>
+        <artifactId>pytorch-engine</artifactId>
+        <version>0.21.0</version>
+    </dependency>
+    <dependency>
+        <groupId>ai.djl.huggingface</groupId>
+        <artifactId>huggingface-tokenizers</artifactId>
+        <version>0.21.0</version>
+    </dependency>
+</dependencies>
+
+
+//2..Load the Pre-trained Model
+
+
+import ai.djl.Model;
+import ai.djl.modality.nlp.translator.HuggingFaceEmbeddingTranslator;
+import ai.djl.translate.TranslateException;
+import ai.djl.translate.Translator;
+
+public class BertSemanticComparison {
+    public static Model loadBertModel() {
+        try {
+            // Load the BERT model from Hugging Face
+            return Model.newInstance("bert-base-uncased");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to load BERT model");
+        }
+    }
+}
+
+
+//3.. Tokenize and Generate Embeddings
+
+import ai.djl.modality.nlp.translator.HuggingFaceEmbeddingTranslator;
+import ai.djl.translate.TranslateException;
+import ai.djl.util.Utils;
+
+import java.util.Arrays;
+
+public class BertSemanticComparison {
+    public static float[] generateEmbedding(Model model, String text) throws TranslateException {
+        Translator<String, float[]> translator = HuggingFaceEmbeddingTranslator.builder().build();
+        try (var predictor = model.newPredictor(translator)) {
+            return predictor.predict(text);
+        }
+    }
+}
+
+// Step 4: Compare Embeddings
+
+public class BertSemanticComparison {
+
+    public static double cosineSimilarity(float[] vec1, float[] vec2) {
+        double dotProduct = 0.0;
+        double magnitude1 = 0.0;
+        double magnitude2 = 0.0;
+
+        for (int i = 0; i < vec1.length; i++) {
+            dotProduct += vec1[i] * vec2[i];
+            magnitude1 += Math.pow(vec1[i], 2);
+            magnitude2 += Math.pow(vec2[i], 2);
+        }
+
+        magnitude1 = Math.sqrt(magnitude1);
+        magnitude2 = Math.sqrt(magnitude2);
+
+        if (magnitude1 == 0 || magnitude2 == 0) {
+            return 0.0; // Avoid division by zero
+        }
+
+        return dotProduct / (magnitude1 * magnitude2);
+    }
+
+    public static void main(String[] args) {
+        try {
+            Model model = loadBertModel();
+            String text1 = "This is the first text.";
+            String text2 = "This is the second text.";
+
+            // Generate embeddings
+            float[] embedding1 = generateEmbedding(model, text1);
+            float[] embedding2 = generateEmbedding(model, text2);
+
+            // Compare embeddings
+            double similarity = cosineSimilarity(embedding1, embedding2);
+            if (similarity > 0.9) {
+                System.out.println("Duplicate text detected!");
+            } else {
+                System.out.println("Texts are not duplicates. Similarity: " + similarity);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
