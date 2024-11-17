@@ -1,0 +1,88 @@
+//1.Convert BERT to ONNX Format:
+//Export the BERT model to ONNX format using tools like Hugging Face’s transformers library in Python.
+
+from transformers import BertModel
+import torch
+
+model = BertModel.from_pretrained("bert-base-uncased")
+dummy_input = torch.zeros((1, 10), dtype=torch.long)  # Adjust shape as needed
+torch.onnx.export(model, dummy_input, "bert.onnx")
+
+//2.Set Up Java Project with OnnxRuntime Dependency:
+//Add the OnnxRuntime library to your Java project
+
+<dependency>
+    <groupId>com.microsoft.onnxruntime</groupId>
+    <artifactId>onnxruntime</artifactId>
+    <version>1.10.0</version>
+</dependency>
+
+//3.Load Model and Perform Text Comparison in Java:
+//Load the ONNX model in Java and use it to generate embeddings.
+//Process embeddings similarly using cosine similarity as in the first approach.
+
+
+import ai.onnxruntime.*;
+import java.nio.LongBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
+public class OnnxBertTextComparison {
+
+    // Load ONNX model
+    private static OrtSession loadModel() throws OrtException {
+        OrtEnvironment env = OrtEnvironment.getEnvironment();
+        return env.createSession("path/to/bert.onnx", new OrtSession.SessionOptions());
+    }
+
+    // Get BERT embeddings for a text input
+    public static float[] getBertEmbedding(String text, OrtSession session) throws OrtException {
+        // Preprocess input text to token IDs, etc. (use pre-trained BERT tokenizer)
+        long[] inputIds = new long[]{101, /* token IDs */, 102}; // Example input
+        LongBuffer inputTensor = LongBuffer.wrap(inputIds);
+
+        Map<String, OnnxTensor> inputs = new HashMap<>();
+        inputs.put("input_ids", OnnxTensor.createTensor(session.getEnvironment(), inputTensor));
+
+        OrtSession.Result result = session.run(inputs);
+        float[] embeddings = (float[]) result.get(0).getValue();
+        result.close();
+        return embeddings;
+    }
+
+    public static void main(String[] args) {
+        try {
+            OrtSession session = loadModel();
+            String text1 = "The quick brown fox jumps over the lazy dog";
+            String text2 = "A fast dark fox leaps over a sleepy dog";
+
+            float[] embedding1 = getBertEmbedding(text1, session);
+            float[] embedding2 = getBertEmbedding(text2, session);
+
+            double similarity = cosineSimilarity(embedding1, embedding2);
+            System.out.println("Cosine Similarity: " + similarity);
+
+            session.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Implement cosine similarity for float arrays
+    public static double cosineSimilarity(float[] vec1, float[] vec2) {
+        double dotProduct = 0.0;
+        double normVec1 = 0.0;
+        double normVec2 = 0.0;
+        for (int i = 0; i < vec1.length; i++) {
+            dotProduct += vec1[i] * vec2[i];
+            normVec1 += Math.pow(vec1[i], 2);
+            normVec2 += Math.pow(vec2[i], 2);
+        }
+        return dotProduct / (Math.sqrt(normVec1) * Math.sqrt(normVec2));
+    }
+}
+
+
+
+//Tokenizer Requirement: In both approaches, a tokenizer compatible with BERT is required. You can preprocess tokens in Python or find a Java //implementation for BERT tokenization.
+//Model Precision: ONNX and REST API approaches may yield slightly different results based on model precision and implementation details.
