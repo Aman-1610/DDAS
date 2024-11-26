@@ -1,0 +1,12 @@
+
+usage of zip file:
+
+Place your documents in the test_images/folder1 and test_images/folder2 directories
+The system will:
+
+Extract images from documents (DOCX, PPTX, PDF)
+Process them using the CNN model
+Compare images across documents
+
+Generate a detailed report of duplicates
+The CNN model will help identify similar images even if they've been slightly modified or embedded differently in documents.
