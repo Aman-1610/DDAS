@@ -1,0 +1,80 @@
+from transformers import AutoTokenizer, AutoModel
+import os
+import torch
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Step 1: Load BERT Model and Tokenizer
+model_name = "sentence-transformers/all-MiniLM-L6-v2"  # Optimized for semantic similarity
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+def get_embedding(text):
+    """Generate a sentence embedding for the input text using BERT."""
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    # Use mean pooling to create a single vector
+    embedding = outputs.last_hidden_state.mean(dim=1)
+    return embedding
+
+def find_duplicates(target_file, directories, similarity_threshold=0.9):
+    """
+    Check for duplicates of the target file in specified directories.
+
+    Parameters:
+        target_file (str): Path to the target file.
+        directories (list): List of directories to search for duplicates.
+        similarity_threshold (float): Cosine similarity threshold to consider files as duplicates.
+
+    Returns:
+        list: List of paths where duplicates were found.
+    """
+    duplicates = []
+
+    # Read the target file's content and embedding
+    with open(target_file, "r", encoding="utf-8") as f:
+        target_text = f.read()
+    target_embedding = get_embedding(target_text)
+
+    for directory in directories:
+        for root, _, files in os.walk(directory):
+            for file in files:
+                try:
+                    file_path = os.path.join(root, file)
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        file_text = f.read()
+                    file_embedding = get_embedding(file_text)
+
+                    # Calculate cosine similarity
+                    similarity = cosine_similarity(
+                        target_embedding.numpy(), file_embedding.numpy()
+                    )[0][0]
+
+                    if similarity >= similarity_threshold:
+                        duplicates.append(file_path)
+
+                except Exception as e:
+                    # Skip files that can't be read
+                    print(f"Error reading {file_path}: {e}")
+
+    return duplicates
+
+
+# Define paths to check
+file1_path = r"C:\Users\aksha\OneDrive\Desktop\sad.txt"
+directories_to_search = [
+    r"C:\Users\aksha\OneDrive\Documents",
+    r"C:\Users\aksha\OneDrive\Desktop",
+    r"C:\Users\aksha\Downloads",
+]
+
+# Search for duplicates
+duplicate_files = find_duplicates(file1_path, directories_to_search)
+
+# Output the results
+if duplicate_files:
+    print(f"Duplicate files found:")
+    for dup in duplicate_files:
+        print(f" - {dup}")
+else:
+    print("No duplicates found.")
