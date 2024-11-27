@@ -1,0 +1,63 @@
+
+from transformers import AutoTokenizer, AutoModel
+import os
+import torch
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Step 1: Load BERT Model and Tokenizer
+model_name = "sentence-transformers/all-MiniLM-L6-v2"  # Optimized for semantic similarity
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+def get_embedding(text):
+    """Generate a sentence embedding for the input text using BERT."""
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    # Use mean pooling to create a single vector
+    embedding = outputs.last_hidden_state.mean(dim=1)
+    return embedding
+
+# Step 2: Read Content from Local Files
+file1_path = r"C:\Users\aksha\OneDrive\Desktop\sad.txt"
+file2_path = r"C:\Users\aksha\OneDrive\Desktop\das.txt"
+
+with open(file1_path, "r", encoding="utf-8") as f1:
+    file1_text = f1.read()
+
+with open(file2_path, "r", encoding="utf-8") as f2:
+    file2_text = f2.read()
+
+# Step 3: Generate Embeddings for Each File
+embedding1 = get_embedding(file1_text)
+embedding2 = get_embedding(file2_text)
+
+# Step 4: Calculate Cosine Similarity
+similarity = cosine_similarity(embedding1.numpy(), embedding2.numpy())[0][0]
+
+# Step 5: Output the Result
+print(f"Semantic Similarity between File 1 and File 2: {similarity:.4f}")
+
+def find_file_in_system(filename):
+    for root, dirs, files in os.walk("C:\\"):  # Replace "C:\\" with the root directory to search
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
+
+# Specify the file name to search
+filename = "das.txt"
+
+# Search for the file
+file_path = find_file_in_system(filename)
+
+if file_path:
+    print(f"File found at: {file_path}")
+    print(f"File found at: {file1_path}")
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = file.read()
+            print(data)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+else:
+    print(f"File '{filename}' not found in the system.")
