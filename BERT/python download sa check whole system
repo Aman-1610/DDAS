@@ -1,0 +1,89 @@
+# pip installations required
+# pip install transformers
+# pip install torch
+# pip install scikit-learn
+
+from transformers import AutoTokenizer, AutoModel
+import os
+import torch
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Step 1: Load BERT Model and Tokenizer
+model_name = "sentence-transformers/all-MiniLM-L6-v2"  # Optimized for semantic similarity
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+def get_embedding(text):
+    """Generate a sentence embedding for the input text using BERT."""
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    # Use mean pooling to create a single vector
+    embedding = outputs.last_hidden_state.mean(dim=1)
+    return embedding
+
+def find_file_in_system(file1_embedding, file1_path):
+    """
+    Search the entire system for a file with similar content to the file in Downloads.
+    """
+    best_similarity = 0
+    best_file_path = None
+
+    for root, dirs, files in os.walk("C:\\"):  # Change root directory if needed
+        for file in files:
+            try:
+                file_path = os.path.join(root, file)
+                if file_path == file1_path:  # Skip the original file
+                    continue
+
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    embedding = get_embedding(content)
+                    similarity = cosine_similarity(file1_embedding.numpy(), embedding.numpy())[0][0]
+                    if similarity > best_similarity:
+                        best_similarity = similarity
+                        best_file_path = file_path
+            except Exception:
+                # Skip unreadable files
+                continue
+    return best_file_path, best_similarity
+
+def get_latest_file_from_downloads():
+    """
+    Retrieve the most recently modified text file from the Downloads folder.
+    """
+    downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+    text_files = [os.path.join(downloads_folder, f) for f in os.listdir(downloads_folder) if f.endswith(".txt")]
+    if not text_files:
+        return None
+    return max(text_files, key=os.path.getmtime)
+
+# Step 2: Main Logic
+if __name__ == "__main__":
+    # Get the latest file from Downloads
+    file1_path = get_latest_file_from_downloads()
+    if not file1_path:
+        print("No text files found in Downloads.")
+        exit()
+
+    print(f"Using file from Downloads: {file1_path}")
+
+    # Read file1 content
+    try:
+        with open(file1_path, "r", encoding="utf-8") as f:
+            file1_text = f.read()
+    except Exception as e:
+        print(f"Error reading file1: {e}")
+        exit()
+
+    # Generate embedding for file1
+    embedding1 = get_embedding(file1_text)
+
+    # Search for a duplicate file in the system
+    file2_path, similarity_score = find_file_in_system(embedding1, file1_path)
+
+    if file2_path:
+        print(f"Duplicate file found at: {file2_path}")
+        print(f"Similarity score: {similarity_score:.4f}")
+    else:
+        print("No duplicate file found in the system.")
