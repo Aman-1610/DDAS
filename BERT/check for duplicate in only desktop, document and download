@@ -8,6 +8,7 @@ model_name = "sentence-transformers/all-MiniLM-L6-v2"  # Optimized for semantic 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModel.from_pretrained(model_name)
 
+
 def get_embedding(text):
     """Generate a sentence embedding for the input text using BERT."""
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
@@ -16,6 +17,7 @@ def get_embedding(text):
     # Use mean pooling to create a single vector
     embedding = outputs.last_hidden_state.mean(dim=1)
     return embedding
+
 
 def find_duplicates(target_file, directories, similarity_threshold=0.9):
     """
@@ -27,9 +29,13 @@ def find_duplicates(target_file, directories, similarity_threshold=0.9):
         similarity_threshold (float): Cosine similarity threshold to consider files as duplicates.
 
     Returns:
-        list: List of paths where duplicates were found.
+        dict: Contains duplicate files and their similarity scores.
+        float: The lowest similarity score found.
+        str: The path of the least similar file.
     """
-    duplicates = []
+    duplicates = {}
+    lowest_similarity = 1.0  # Initialize with max similarity
+    least_similar_file = None
 
     # Read the target file's content and embedding
     with open(target_file, "r", encoding="utf-8") as f:
@@ -50,14 +56,20 @@ def find_duplicates(target_file, directories, similarity_threshold=0.9):
                         target_embedding.numpy(), file_embedding.numpy()
                     )[0][0]
 
+                    # Check if similarity exceeds the threshold
                     if similarity >= similarity_threshold:
-                        duplicates.append(file_path)
+                        duplicates[file_path] = similarity
+
+                    # Update the least similar file
+                    if similarity < lowest_similarity:
+                        lowest_similarity = similarity
+                        least_similar_file = file_path
 
                 except Exception as e:
                     # Skip files that can't be read
                     print(f"Error reading {file_path}: {e}")
 
-    return duplicates
+    return duplicates, lowest_similarity, least_similar_file
 
 
 # Define paths to check
@@ -69,12 +81,15 @@ directories_to_search = [
 ]
 
 # Search for duplicates
-duplicate_files = find_duplicates(file1_path, directories_to_search)
+duplicate_files, lowest_similarity, least_similar_file = find_duplicates(file1_path, directories_to_search)
 
 # Output the results
 if duplicate_files:
-    print(f"Duplicate files found:")
-    for dup in duplicate_files:
-        print(f" - {dup}")
+    print("Duplicate files found:")
+    for dup, similarity in duplicate_files.items():
+        print(f" - {dup} (Similarity: {similarity:.4f})")
 else:
     print("No duplicates found.")
+    if least_similar_file:
+        print(f"Least similar file found:")
+        print(f" - {least_similar_file} (Similarity: {lowest_similarity:.4f})")
