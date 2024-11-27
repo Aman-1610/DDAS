@@ -1,0 +1,118 @@
+from transformers import AutoTokenizer, AutoModel
+import os
+import torch
+from sklearn.metrics.pairwise import cosine_similarity
+from docx import Document  # To handle .docx files
+
+# Step 1: Load BERT Model and Tokenizer
+model_name = "sentence-transformers/all-MiniLM-L6-v2"  # Optimized for semantic similarity
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+
+def get_embedding(text):
+    """Generate a sentence embedding for the input text using BERT."""
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    # Use mean pooling to create a single vector
+    embedding = outputs.last_hidden_state.mean(dim=1)
+    return embedding
+
+
+def read_file_content(file_path):
+    """
+    Read the content of a file, supporting plain text and .docx formats.
+    """
+    if file_path.endswith(".docx"):
+        try:
+            doc = Document(file_path)
+            return "\n".join([paragraph.text for paragraph in doc.paragraphs])
+        except Exception as e:
+            raise ValueError(f"Error reading .docx file: {file_path} - {e}")
+    else:
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except Exception as e:
+            raise ValueError(f"Error reading text file: {file_path} - {e}")
+
+
+def find_duplicates(target_file, directories, similarity_threshold=0.9):
+    """
+    Check for duplicates of the target file in specified directories.
+
+    Parameters:
+        target_file (str): Path to the target file.
+        directories (list): List of directories to search for duplicates.
+        similarity_threshold (float): Cosine similarity threshold to consider files as duplicates.
+
+    Returns:
+        tuple: List of duplicates with similarities, maximum similarity, and corresponding file.
+    """
+    duplicates = []
+    max_similarity = 0.0
+    max_similarity_file = None
+
+    # Read the target file's content and embedding
+    try:
+        target_text = read_file_content(target_file)
+        target_embedding = get_embedding(target_text)
+    except Exception as e:
+        print(f"Error reading target file: {e}")
+        return [], 0.0, None
+
+    for directory in directories:
+        for root, _, files in os.walk(directory):
+            for file in files:
+                file_path = os.path.join(root, file)
+
+                # Skip the target file
+                if os.path.abspath(file_path) == os.path.abspath(target_file):
+                    continue
+
+                try:
+                    file_text = read_file_content(file_path)
+                    file_embedding = get_embedding(file_text)
+
+                    # Calculate cosine similarity
+                    similarity = cosine_similarity(
+                        target_embedding.numpy(), file_embedding.numpy()
+                    )[0][0]
+
+                    # Track duplicates
+                    if similarity >= similarity_threshold:
+                        duplicates.append((file_path, similarity))
+
+                    # Track maximum similarity
+                    if similarity > max_similarity:
+                        max_similarity = similarity
+                        max_similarity_file = file_path
+
+                except Exception as e:
+                    print(f"Error reading {file_path}: {e}")
+
+    return duplicates, max_similarity, max_similarity_file
+
+
+# Define paths to check
+file1_path = r"C:\Users\aksha\OneDrive\Documents\ak1.docx"
+directories_to_search = [
+    r"C:\Users\aksha\OneDrive\Documents",
+    r"C:\Users\aksha\OneDrive\Desktop",
+    r"C:\Users\aksha\Downloads",
+]
+
+# Search for duplicates
+duplicates, max_similarity, max_similarity_file = find_duplicates(file1_path, directories_to_search)
+
+# Output the results
+if duplicates:
+    print(f"Duplicate files found:")
+    for dup, similarity in duplicates:
+        print(f" - {dup} (Semantic Similarity: {similarity:.4f})")
+else:
+    print("No duplicates found.")
+    print(f"Maximum similarity found: {max_similarity:.4f}")
+    if max_similarity_file :
+        print(f"File with maximum similarity: {max_similarity_file}")
