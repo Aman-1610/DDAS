@@ -2,6 +2,7 @@ from transformers import AutoTokenizer, AutoModel
 import os
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
+from docx import Document  # Import for reading .docx files
 
 # Step 1: Load BERT Model and Tokenizer
 model_name = "sentence-transformers/all-MiniLM-L6-v2"  # Optimized for semantic similarity
@@ -17,6 +18,29 @@ def get_embedding(text):
     # Use mean pooling to create a single vector
     embedding = outputs.last_hidden_state.mean(dim=1)
     return embedding
+
+
+def read_file(file_path):
+    """
+    Read the content of a file (.txt or .docx).
+
+    Parameters:
+        file_path (str): Path to the file.
+
+    Returns:
+        str: Content of the file as text.
+    """
+    if file_path.endswith(".txt"):
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    elif file_path.endswith(".docx"):
+        try:
+            doc = Document(file_path)
+            return "\n".join(paragraph.text for paragraph in doc.paragraphs)
+        except Exception as e:
+            print(f"Error reading .docx file {file_path}: {e}")
+            return ""
+    return ""
 
 
 def find_duplicates(target_file, directories, similarity_threshold=0.9):
@@ -38,8 +62,9 @@ def find_duplicates(target_file, directories, similarity_threshold=0.9):
     least_similar_file = None
 
     # Read the target file's content and embedding
-    with open(target_file, "r", encoding="utf-8") as f:
-        target_text = f.read()
+    target_text = read_file(target_file)
+    if not target_text:
+        raise ValueError(f"Failed to read the target file: {target_file}")
     target_embedding = get_embedding(target_text)
 
     for directory in directories:
@@ -47,8 +72,11 @@ def find_duplicates(target_file, directories, similarity_threshold=0.9):
             for file in files:
                 try:
                     file_path = os.path.join(root, file)
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        file_text = f.read()
+                    # Read the file content (supports .txt and .docx)
+                    file_text = read_file(file_path)
+                    if not file_text:
+                        continue
+
                     file_embedding = get_embedding(file_text)
 
                     # Calculate cosine similarity
@@ -67,13 +95,13 @@ def find_duplicates(target_file, directories, similarity_threshold=0.9):
 
                 except Exception as e:
                     # Skip files that can't be read
-                    print(f"Error reading {file_path}: {e}")
+                    print(f"Error processing {file_path}: {e}")
 
     return duplicates, lowest_similarity, least_similar_file
 
 
 # Define paths to check
-file1_path = r"C:\Users\aksha\OneDrive\Desktop\sad.txt"
+file1_path = r"C:\Users\aksha\OneDrive\Documents\ak1.docx"  # Can be .txt or .docx
 directories_to_search = [
     r"C:\Users\aksha\OneDrive\Documents",
     r"C:\Users\aksha\OneDrive\Desktop",
