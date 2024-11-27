@@ -1,7 +1,8 @@
+# pip installations required
+# pip install transformers
+# pip install torch
+# pip install scikit-learn
 #pip install python-docx
-#
-#
-#
 
 from transformers import AutoTokenizer, AutoModel
 import os
